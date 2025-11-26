@@ -10,6 +10,15 @@ import importlib
 import subprocess
 import shutil
 import webbrowser
+import ctypes
+from tkinter import font as tkfont
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 if os.path.basename(__file__) != "LunarEZ.py":
     res = messagebox.askokcancel("Filename Warning", "LunarEZ filename is not exactly \"LunarEZ.py\", some items wont work if this persists, please rename it back or continue with issues.", icon="error")
@@ -105,6 +114,8 @@ if not os.path.exists("lib/ez_files/config_text.png"):
     download_image("https://raw.githubusercontent.com/imdaclassic/LunarEZ/main/assets/config_text.png", "lib/ez_files/config_text.png")
 if not os.path.exists("lib/ez_files/model_text.png"): 
     download_image("https://raw.githubusercontent.com/imdaclassic/LunarEZ/main/assets/model_text.png", "lib/ez_files/model_text.png")
+if not os.path.exists("lib/ez_files/PressStart2P-Regular.ttf"): 
+    download_image("https://raw.githubusercontent.com/imdaclassic/LunarEZ/main/assets/PressStart2P-Regular.ttf", "lib/ez_files/PressStart2P-Regular.ttf")
 # Startup Stuff End
 
 clr()
@@ -113,22 +124,62 @@ clr()
 print(f"LunarEZ Running -- Version: {ver}")
 
 root = ctk.CTk()
+
+FONT_PATH = resource_path("lib/ez_files/PressStart2P-Regular.ttf")
+
+myappid = f'classic.LunarEZ.ez.{ver}'
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+root.iconbitmap("lib/ez_files/icon.ico")
 root.title(f"LunarEZ - V{ver}")
 root.geometry("300x500")
 root.resizable(0,0)
-root.iconbitmap("lib/ez_files/icon.ico")
 
 banner_pil = Image.open("lib/ez_files/banner.png")
 banner_img = ctk.CTkImage(light_image=banner_pil, size=(300, 100))
 banner_label = ctk.CTkLabel(root, image=banner_img, text="")
 banner_label.pack(side="top", fill="x")
 
+#Config Frame
+
+config_frame = ctk.CTkFrame(root, width=270,height=270)
+
+config_pil = Image.open("lib/ez_files/config_text.png")
+config_img = ctk.CTkImage(light_image=config_pil, size=(130, 50))
+config_label = ctk.CTkLabel(config_frame, image=config_img, text="")
+config_label.pack(padx=75)
+
+#Config Frame End
+
+#Model Frame
+
+model_frame = ctk.CTkFrame(root)
+
+model_pil = Image.open("lib/ez_files/model_text.png")
+model_img = ctk.CTkImage(light_image=model_pil, size=(130, 50))
+model_label = ctk.CTkLabel(model_frame, image=model_img, text="")
+model_label.pack(padx=75)
+
+
+#Model Frame End
+
+tut_icon_pil = Image.open("lib/ez_files/youtube_icon.png")
+tut_icon_img = ctk.CTkImage(light_image=tut_icon_pil, size=(40, 40))
+def tut_on_click():
+    webbrowser.open("https://www.youtube.com/@imdaclassic")
+tut_image_button = ctk.CTkButton(root, image=tut_icon_img, text="Tutorial", command=tut_on_click, width=100, height=10, fg_color="white", text_color="black", font=("Helvetica", 18, "bold"))
+
+label = tk.Label(root, text="Click on Config/Model\n Switcher to begin", font=("Helvetica", 15, "bold"))
+
 front_frame = ctk.CTkFrame(root)
 
 config_text_pil = Image.open("lib/ez_files/config_text.png")
 config_text_img = ctk.CTkImage(light_image=config_text_pil, size=(130, 50))
 def config_text_on_click():
-    webbrowser.open("https://github.com/imdaclassic/LunarEZ")
+    label.pack_forget()
+    tut_image_button.pack_forget()
+    config_frame.pack(pady=5, padx=5)
+    model_frame.pack_forget()
 config_text_button = ctk.CTkButton(
     front_frame,
     image=config_text_img,
@@ -145,7 +196,10 @@ config_text_button.grid(row=0, column=0)
 model_text_pil = Image.open("lib/ez_files/model_text.png")
 model_text_img = ctk.CTkImage(light_image=model_text_pil, size=(130, 50))
 def model_text_on_click():
-    webbrowser.open("https://github.com/imdaclassic/LunarEZ")
+    label.pack_forget()
+    tut_image_button.pack_forget()
+    config_frame.pack_forget()
+    model_frame.pack(pady=5, padx=5)
 model_text_button = ctk.CTkButton(
     front_frame,
     image=model_text_img,
@@ -161,7 +215,13 @@ model_text_button.grid(row=0, column=1)
 
 front_frame.pack(side="top")
 
-bottom_frame = ctk.CTkFrame(root)
+label.pack(pady=20)
+tut_image_button.pack()
+
+i = ctk.CTkFrame(root)
+ctk.CTkLabel(i, text="made with <3 by classic (@probablyclassic on discord)", font=("Helvetica", 10, "bold")).pack()
+
+bottom_frame = ctk.CTkFrame(i)
 
 bottom_frame.grid_columnconfigure(0, weight=1)
 bottom_frame.grid_columnconfigure(1, weight=0)
@@ -172,22 +232,23 @@ github_icon_img = ctk.CTkImage(light_image=github_icon_pil, size=(40, 40))
 def github_on_click():
     webbrowser.open("https://github.com/imdaclassic/LunarEZ")
 github_image_button = ctk.CTkButton(bottom_frame, image=github_icon_img, text="", command=github_on_click, width=100, height=10, fg_color="white")
-github_image_button.grid(row=0, column=0, pady=5, padx=5)
+github_image_button.grid(row=1, column=0, pady=5, padx=5)
 
 youtube_icon_pil = Image.open("lib/ez_files/youtube_icon.png")
 youtube_icon_img = ctk.CTkImage(light_image=youtube_icon_pil, size=(40, 40))
 def youtube_on_click():
     webbrowser.open("https://www.youtube.com/@imdaclassic")
 youtube_image_button = ctk.CTkButton(bottom_frame, image=youtube_icon_img, text="", command=youtube_on_click, width=100, height=10, fg_color="white")
-youtube_image_button.grid(row=0, column=1, pady=5, padx=5)
+youtube_image_button.grid(row=1, column=1, pady=5, padx=5)
 
 v2_icon_pil = Image.open("lib/ez_files/v2_icon.png")
 v2_icon_img = ctk.CTkImage(light_image=v2_icon_pil, size=(40, 40))
 def v2_on_click():
     webbrowser.open("https://gannonr.com/ref?key=KUV4esxr1FdWlbFbEHboI3Z9l")
 v2_image_button = ctk.CTkButton(bottom_frame, image=v2_icon_img, text="", command=v2_on_click, width=100, height=10, fg_color="white")
-v2_image_button.grid(row=0, column=2, pady=5, padx=5)
+v2_image_button.grid(row=1, column=2, pady=5, padx=5)
 
 bottom_frame.pack(side="bottom", fill="x",pady=5, padx=5)
 
+i.pack(side="bottom",fill="x")
 root.mainloop()

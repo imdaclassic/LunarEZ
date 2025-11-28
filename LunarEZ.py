@@ -12,6 +12,7 @@ import shutil
 import webbrowser
 import ctypes
 from tkinter import font as tkfont
+import json
 
 def resource_path(relative_path):
     try:
@@ -24,6 +25,19 @@ if os.path.basename(__file__) != "LunarEZ.py":
     res = messagebox.askokcancel("Filename Warning", "LunarEZ filename is not exactly \"LunarEZ.py\", some items wont work if this persists, please rename it back or continue with issues.", icon="error")
     if not res:
         sys.exit(0)
+
+def json_read(filename: str):
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"File not found: {filename}")
+    with open(filename, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data
+
+
+def json_write(filename: str, data):
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+    return
 
 def ensure_customtkinter():
     try:
@@ -97,6 +111,20 @@ if not os.path.exists("lib"):
 if not os.path.exists("lib/ez_files"):
     os.mkdir("lib/ez_files")
 
+if not os.path.exists("lib/ez_files/config_saves"):
+    os.mkdir("lib/ez_files/config_saves")
+
+if not os.path.exists("lib/ez_files/model_saves"):
+    os.mkdir("lib/ez_files/model_saves")
+
+if not os.path.exists("lib/ez_files/model_saves/content.json"):
+    with open("lib/ez_files/model_saves/content.json", 'w') as file:
+        file.write("{}")
+
+if not os.path.exists("lib/ez_files/config_saves/content.json"):
+    with open("lib/ez_files/config_saves/content.json", 'w') as file:
+        file.write('{"current": "unnamed", "paths": [["unnamed.json", "unnamed"]]}')
+
 print("Downloading Assets... (If not already there)")
 if not os.path.exists("lib/ez_files/icon.png"):
     download_image("https://raw.githubusercontent.com/imdaclassic/LunarEZ/main/assets/icon.png", "lib/ez_files/icon.png")
@@ -132,7 +160,7 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 root.iconbitmap("lib/ez_files/icon.ico")
 root.title(f"LunarEZ - V{ver}")
-root.geometry("300x500")
+root.geometry("300x600")
 root.resizable(0,0)
 
 banner_pil = Image.open("lib/ez_files/banner.png")
@@ -148,6 +176,33 @@ config_pil = Image.open("lib/ez_files/config_text.png")
 config_img = ctk.CTkImage(light_image=config_pil, size=(130, 50))
 config_label = ctk.CTkLabel(config_frame, image=config_img, text="")
 config_label.pack(padx=75)
+
+ctk.CTkLabel(config_frame, text="Select using dropdown menu the config you want to use / edit", font=("Helvetica", 8, "bold")).pack()
+
+def config_select(value):
+    print("Current config: "+value)
+    data = json_read("lib/ez_files/config_saves/content.json")
+    data["current"] = value
+    json_write("lib/ez_files/config_saves/content.json", data)
+
+config_selection = ctk.CTkOptionMenu(
+    config_frame,
+    values=["Loading..."], 
+    command=config_select
+)
+config_selection.pack(pady=5)
+
+def Refresh_Configs():
+    data = json_read("lib/ez_files/config_saves/content.json")
+    data2 = []
+    for i in data["paths"]:
+        data2.append(i[1])
+    config_selection.configure(values=data2)
+
+    config_selection.set(data["current"])
+    config_select(data["current"])
+
+Refresh_Configs()
 
 #Config Frame End
 
